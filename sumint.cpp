@@ -55,15 +55,16 @@ int64_t SumAVX8(int8_t *buffer, uint64_t count, int8_t sanitizeValue = -128)
 	int64_t firstRun = (count >> 5) & MASK(8);
 	count -= (runs << 13) + (firstRun << 5);
 	__m256i *runner = reinterpret_cast<__m256i *>(buffer);
+	__m256i *end = runner + (runs << 8) + firstRun;
 	uint64_t subRun = firstRun ? firstRun : 1 << 8;
 	do {
-		__m256i *end = runner + subRun;
+		__m256i *endRun = runner + subRun;
 		__m256i wordSum = _mm256_set1_epi16(0);
 		do {
 			__m256i sanatized = _mm256_sub_epi8(*runner, _mm256_and_si256(*runner, _mm256_cmpeq_epi8(*runner, bytem128)));
 			__m128i *sanatized128 = reinterpret_cast<__m128i *>(&sanatized);
 			wordSum = _mm256_add_epi16(wordSum, _mm256_add_epi16(_mm256_cvtepi8_epi16(*sanatized128), _mm256_cvtepi8_epi16(sanatized128[1])));
-		} while (++runner < end);
+		} while (++runner < endRun);
 		__m128i *subs = reinterpret_cast<__m128i *>(&wordSum);
 		__m256i dwordSum = _mm256_hadd_epi32(_mm256_cvtepi16_epi32(*subs), _mm256_cvtepi16_epi32(subs[1]));
 		int32_t *vsum = reinterpret_cast<int32_t *>(&dwordSum);
@@ -72,7 +73,7 @@ int64_t SumAVX8(int8_t *buffer, uint64_t count, int8_t sanitizeValue = -128)
 			total += *vsum++;
 		} while (vsum < vsumEnd);
 		subRun = 1 << 8;
-	} while (--runs > 0);
+	} while (runner < end);
 	int remainder = count & 31;
 	if (remainder) {
 		buffer = reinterpret_cast<int8_t *>(runner);
