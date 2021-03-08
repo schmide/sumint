@@ -65,8 +65,8 @@ int64_t SumAVX8(int8_t *buffer, uint64_t count, int8_t sanitizeValue = -128)
 			__m128i *sanatized128 = reinterpret_cast<__m128i *>(&sanatized);
 			wordSum = _mm256_add_epi16(wordSum, _mm256_add_epi16(_mm256_cvtepi8_epi16(*sanatized128), _mm256_cvtepi8_epi16(sanatized128[1])));
 		} while (++runner < endRun);
-		__m128i *subs = reinterpret_cast<__m128i *>(&wordSum);
-		__m256i dwordSum = _mm256_hadd_epi32(_mm256_cvtepi16_epi32(*subs), _mm256_cvtepi16_epi32(subs[1]));
+		__m128i *wordSum128 = reinterpret_cast<__m128i *>(&wordSum);
+		__m256i dwordSum = _mm256_hadd_epi32(_mm256_cvtepi16_epi32(*wordSum128), _mm256_cvtepi16_epi32(wordSum128[1]));
 		int32_t *vsum = reinterpret_cast<int32_t *>(&dwordSum);
 		int32_t *vsumEnd = vsum + 8;
 		do {
