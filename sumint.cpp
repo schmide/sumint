@@ -38,6 +38,8 @@ int64_t SumAVX8(int8_t *buffer, uint64_t count, int8_t sanitizeValue = -128)
 		return 0;
 	int64_t total = 0;
 	int64_t leadIn = TOALIGNED64(buffer, 4); // to align 16
+	if (count - leadIn < 32)
+		leadIn = count;
 	if (leadIn) {
 		int8_t *end8 = buffer + leadIn;
 		do {
